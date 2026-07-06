@@ -6,7 +6,7 @@ import logging
 from collections.abc import Callable
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QThread
+from PySide6.QtCore import QObject, Qt, QThread, Signal
 from PySide6.QtWidgets import (
     QComboBox,
     QFileDialog,
@@ -31,6 +31,20 @@ from .event_tree import EventTree
 from .worker import AnalyzeWorker, OrganizeWorker
 
 _LOG = get_logger("gui")
+
+
+class _LogBridge(QObject):
+    """Marshals log records emitted from worker threads onto the GUI thread.
+
+    ``QueueLogHandler`` runs its callback in whichever thread emitted the log
+    record (pipeline worker threads, the organise ``QThread``). Touching Qt
+    widgets from those threads is undefined behaviour, so records are forwarded
+    through this signal, which Qt delivers to the main thread via a queued
+    connection.
+    """
+
+    message = Signal(str, int)
+
 
 _LEVEL_COLORS = {
     40: "#c0392b",  # ERROR
@@ -149,7 +163,9 @@ class MainWindow(QWidget):
 
     def _attach_log_handler(self) -> None:
         configure_logging(self._config.logging)
-        handler = QueueLogHandler(self._append_log)
+        self._log_bridge = _LogBridge()
+        self._log_bridge.message.connect(self._append_log, Qt.ConnectionType.QueuedConnection)
+        handler = QueueLogHandler(self._log_bridge.message.emit)
         logging.getLogger("photo_organizer").addHandler(handler)
 
     # -- logging --------------------------------------------------------- #

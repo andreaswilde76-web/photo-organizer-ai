@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.python-version
+
+# Tooling caches
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Application data / user output
+*.sqlite
+*.sqlite3
+*.db
+photo_organizer.log
+logs/
+.cache/
+output/
+
+# User-local configuration (ship config.example.yaml instead)
+config.yaml
+config.json
+
+# Devin testing artifacts
+test-plan.md
+test-report.md
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

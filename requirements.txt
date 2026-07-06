@@ -1,0 +1,26 @@
+# Core runtime dependencies for PhotoOrganizer AI.
+# For optional features install the extras from pyproject.toml, e.g.:
+#   pip install -e ".[gui,exif,geo,faces,openai,raw]"
+#
+# See docs/installation.md for the full, Windows-11-focused setup guide.
+
+PyYAML>=6.0
+Pillow>=10.0
+pillow-heif>=0.16
+numpy>=1.26
+requests>=2.31
+tqdm>=4.66
+python-dateutil>=2.9
+platformdirs>=4.2
+
+# --- GUI (required for the desktop application) ---
+PySide6>=6.6
+
+# --- Optional but recommended ---
+ExifRead>=3.0            # richer EXIF parsing (video/RAW fallback)
+reverse_geocoder>=1.5.1  # offline reverse geocoding (city/country)
+
+# --- Optional heavy extras (uncomment as needed) ---
+# face-recognition>=1.3.0  # face detection/recognition (needs dlib/CMake)
+# openai>=1.30             # OpenAI Vision API backend (only if you opt-in)
+# rawpy>=0.19             # RAW photo decoding (CR2/NEF/ARW/DNG ...)

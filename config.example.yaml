@@ -1,0 +1,86 @@
+# ---------------------------------------------------------------------------
+# PhotoOrganizer AI - example configuration
+#
+# Copy this file to `config.yaml` and adjust it to your needs.
+# All AI components are local by default; no cloud service is required.
+# JSON is also supported (use a `.json` file with the same keys).
+# ---------------------------------------------------------------------------
+
+# Source folder containing the unsorted photos/videos.
+source_dir: "C:/Users/Andreas/Pictures/Unsorted"
+
+# Target root folder. The structure Year/Month/Event is created below it.
+target_dir: "C:/Users/Andreas/Pictures/Fotos"
+
+# "move" or "copy". Files are only touched after you confirm the preview.
+operation: "copy"
+
+# SQLite database used as an analysis cache. Already-analysed files (matched
+# by content hash) are never analysed again.
+database_path: "photo_organizer.sqlite"
+
+# Language used for generated folder/event names and descriptions.
+language: "de"
+
+logging:
+  level: "INFO"          # DEBUG | INFO | WARNING | ERROR
+  file: "photo_organizer.log"
+  console: true
+
+media:
+  # File extensions to include (lower-case, without the dot).
+  photo_extensions: [jpg, jpeg, png, heic, webp, tif, tiff, raw, cr2, nef, arw, dng]
+  video_extensions: [mp4, mov, avi, mkv]
+  recursive: true
+  # Skip files smaller than this many bytes (e.g. thumbnails).
+  min_file_size: 1024
+
+ai:
+  # Backend: "ollama" (local, recommended), "openai" (opt-in cloud) or "null".
+  backend: "ollama"
+  # Model name understood by the selected backend.
+  model: "qwen2.5vl:7b"          # e.g. llava, minicpm-v, qwen2.5vl:7b
+  # Enable AI vision analysis at all. If false, only metadata is used.
+  enabled: true
+  # Down-scale the longest image edge before sending to the model (px).
+  max_image_size: 1024
+  # Request timeout in seconds.
+  timeout: 120
+  # Use the vision model to *estimate* a capture date when no metadata exists.
+  estimate_date_when_missing: true
+
+  ollama:
+    host: "http://localhost:11434"
+    # keep_alive controls how long Ollama keeps the model in (V)RAM.
+    keep_alive: "5m"
+
+  openai:
+    # Only used when backend == "openai". Read from the OPENAI_API_KEY env var
+    # if left empty. Requires opting in explicitly.
+    api_key: ""
+    base_url: "https://api.openai.com/v1"
+
+geo:
+  # Offline reverse geocoding (city/country) from GPS coordinates.
+  enabled: true
+
+faces:
+  # Face *detection* (counting faces). Recognition is an optional extension.
+  enabled: false
+
+clustering:
+  # Max time gap (hours) within which photos may belong to the same event.
+  max_time_gap_hours: 6.0
+  # Max distance (km) within which photos may belong to the same event.
+  max_distance_km: 25.0
+  # Weight of visual/scene similarity (0..1) when merging clusters.
+  visual_weight: 0.4
+  # Minimum number of photos to keep a named cluster; smaller ones become
+  # generic "Event NN" entries.
+  min_cluster_size: 1
+
+performance:
+  # Number of worker threads for I/O + AI requests. 0 = auto (cpu_count).
+  workers: 0
+  # Try to use the GPU if the backend supports it.
+  use_gpu: true

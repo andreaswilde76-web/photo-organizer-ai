@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import threading
 from collections.abc import Callable
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import CancelledError, ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -116,22 +116,28 @@ class Pipeline:
             if progress is not None:
                 progress(result.progress.done, result.progress.total, message)
 
-        with ThreadPoolExecutor(max_workers=workers) as pool:
+        pool = ThreadPoolExecutor(max_workers=workers)
+        try:
             futures = {
                 pool.submit(self._process_file, path, kind is MediaKind.VIDEO): path
                 for path, kind in discovered
             }
             for future in as_completed(futures):
-                path = futures[future]
                 if self._should_stop():
                     break
                 self._wait_if_paused()
+                path = futures[future]
                 try:
                     media, was_cached = future.result()
+                except CancelledError:
+                    continue
                 except Exception as exc:
                     result.progress.failed += 1
                     _LOG.error("Failed to process %s: %s", path, exc)
                 else:
+                    if media is None and self._should_stop():
+                        # File was skipped because a stop was requested.
+                        continue
                     if media is not None:
                         with lock:
                             files.append(media)
@@ -142,7 +148,13 @@ class Pipeline:
                 with lock:
                     result.progress.done += 1
                 _emit(f"Processed {path.name}")
+        finally:
+            # On stop, drop queued work and return promptly instead of blocking
+            # until every in-flight AI request times out.
+            pool.shutdown(wait=not self._should_stop(), cancel_futures=True)
 
+        if self._should_stop():
+            _LOG.info("Analysis stopped by user after %d file(s).", result.progress.done)
         result.files = files
         if not self._should_stop():
             self._build_events(result)
@@ -150,6 +162,11 @@ class Pipeline:
 
     def _process_file(self, path: Path, is_video: bool) -> tuple[MediaFile | None, bool]:
         """Return ``(media, was_cached)`` for a single file."""
+        # Honour pause/stop from inside the worker so the controls are
+        # responsive even while thousands of files are queued.
+        self._wait_if_paused()
+        if self._should_stop():
+            return None, False
         file_hash = hash_file(path, partial=is_video)
 
         cached = self._db.load_media(file_hash)

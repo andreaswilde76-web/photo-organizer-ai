@@ -49,6 +49,27 @@ def test_full_run(make_image: Callable[..., Path], tmp_path: Path) -> None:
     assert exec_result.copied == 3
 
 
+def test_stop_aborts_analysis(make_image: Callable[..., Path], tmp_path: Path) -> None:
+    src = tmp_path / "src"
+    src.mkdir()
+    for i in range(20):
+        make_image(f"src/2022-07-04_10-{i:02d}-00_{i}.jpg")
+
+    cfg = _config(tmp_path, src)
+    with Database(tmp_path / "db.sqlite") as db:
+        pipeline = Pipeline(cfg, db)
+
+        def progress(done: int, total: int, message: str) -> None:
+            # Request a stop as soon as the first file is reported.
+            pipeline.stop()
+
+        result = pipeline.analyze(progress=progress)
+        # A requested stop must abort before clustering/planning happen.
+        assert result.events == []
+        assert result.plan is None
+        pipeline.close()
+
+
 def test_cache_second_run_uses_cache(make_image: Callable[..., Path], tmp_path: Path) -> None:
     src = tmp_path / "src"
     src.mkdir()

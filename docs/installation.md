@@ -3,6 +3,24 @@
 This guide walks you through a complete, fully-local installation on Windows 11.
 Linux and macOS work the same way (only the shell commands differ).
 
+## Quick start (recommended)
+
+If you just want to run the app and have **Python 3.12+** installed:
+
+1. Download or clone the project.
+2. Double-click **`start.bat`** in the project root (or, in PowerShell, run
+   `./start.ps1`).
+
+On first launch it creates a local virtual environment, installs the app with
+the `gui,exif,geo` extras, and opens the GUI. Later launches reuse that
+environment and start instantly. The manual steps below (sections 1-7) are the
+equivalent long form and are only needed if you want more control or optional
+extras.
+
+To build a **standalone executable or a Setup installer** (so end users don't
+need Python at all), see ["Building a Windows installer"](#building-a-windows-installer)
+below.
+
 ## 1. Prerequisites
 
 - **Python 3.12** - install from [python.org](https://www.python.org/downloads/)
@@ -111,6 +129,40 @@ photo-organizer-gui
 # or headless
 photo-organizer --config config.yaml
 ```
+
+## Building a Windows installer
+
+To distribute the app to machines **without** Python, build a standalone
+package. All build assets live in [`packaging/windows/`](../packaging/windows/).
+
+> These builds must run **on Windows** - PyInstaller and Inno Setup produce
+> native binaries and cannot be cross-compiled.
+
+### Standalone executable
+
+From the project root:
+
+```powershell
+packaging\windows\build_exe.bat
+```
+
+Output: `dist\PhotoOrganizerAI\PhotoOrganizerAI.exe` (a self-contained folder).
+
+### Setup installer (Setup.exe)
+
+Install [Inno Setup 6](https://jrsoftware.org/isdl.php), then run:
+
+```powershell
+packaging\windows\build_installer.bat
+```
+
+This builds the executable and compiles the installer. Output:
+`dist\installer\PhotoOrganizerAI-Setup.exe` - a single file you can share; it
+installs the app with Start-menu (and optional desktop) shortcuts and an
+uninstaller.
+
+See [`packaging/windows/README.md`](../packaging/windows/README.md) for details
+and how to add a custom icon.
 
 ## Troubleshooting
 

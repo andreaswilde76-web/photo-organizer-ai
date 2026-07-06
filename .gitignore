@@ -25,6 +25,14 @@ logs/
 .cache/
 output/
 
+# User-local configuration (ship config.example.yaml instead)
+config.yaml
+config.json
+
+# Devin testing artifacts
+test-plan.md
+test-report.md
+
 # OS / IDE
 .DS_Store
 Thumbs.db

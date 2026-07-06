@@ -61,6 +61,13 @@ components are swappable and the code is modular, typed and production-ready.
 
 ## Quick start (Windows 11)
 
+**Easiest:** double-click **`start.bat`** (or run `./start.ps1` in PowerShell).
+On first run it creates a local virtual environment, installs the app, and opens
+the GUI; later runs start instantly. Requires Python 3.12+ on PATH.
+
+<details>
+<summary>Manual steps (equivalent to <code>start.bat</code>)</summary>
+
 ```powershell
 # 1. Create and activate a virtual environment (Python 3.12)
 py -3.12 -m venv .venv
@@ -82,6 +89,12 @@ photo-organizer-gui
 # 5b. …or run headless
 photo-organizer --config config.yaml
 ```
+</details>
+
+**Build a standalone installer** (so users don't need Python): run
+`packaging\windows\build_installer.bat` to produce
+`dist\installer\PhotoOrganizerAI-Setup.exe`. See
+[packaging/windows/README.md](packaging/windows/README.md).
 
 See [docs/installation.md](docs/installation.md) for the detailed installation
 guide and [docs/user_guide.md](docs/user_guide.md) for the full user manual.

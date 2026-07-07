@@ -117,6 +117,11 @@ class AIConfig:
     enabled: bool = True
     max_image_size: int = 1024
     timeout: int = 120
+    # Maximum number of vision-model requests sent to the backend at once. Local
+    # servers such as Ollama serve requests one at a time, so flooding them with
+    # one request per worker thread makes the queued requests hit the read
+    # timeout. Keep this small (1 for a single local GPU/CPU).
+    max_concurrency: int = 1
     estimate_date_when_missing: bool = True
     ollama: OllamaConfig = field(default_factory=OllamaConfig)
     openai: OpenAIConfig = field(default_factory=OpenAIConfig)
@@ -272,6 +277,7 @@ def _ai_section(data: Any) -> AIConfig:
         enabled=bool(data.get("enabled", True)),
         max_image_size=int(data.get("max_image_size", 1024)),
         timeout=int(data.get("timeout", 120)),
+        max_concurrency=max(1, int(data.get("max_concurrency", 1))),
         estimate_date_when_missing=bool(data.get("estimate_date_when_missing", True)),
         ollama=_section(OllamaConfig, data.get("ollama")),
         openai=_section(OpenAIConfig, data.get("openai")),

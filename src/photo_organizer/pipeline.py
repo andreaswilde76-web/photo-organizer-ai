@@ -75,6 +75,10 @@ class Pipeline:
         self._pause = threading.Event()  # set == running; cleared == paused
         self._pause.set()
         self._stop = threading.Event()
+        # Limit how many vision-model requests are in flight at once. Local
+        # backends (Ollama) serve requests serially, so sending one per worker
+        # thread makes the queued requests exceed the read timeout.
+        self._ai_slots = threading.Semaphore(max(1, config.ai.max_concurrency))
 
     # -- control --------------------------------------------------------- #
     def pause(self) -> None:
@@ -194,13 +198,14 @@ class Pipeline:
         if not is_video:
             if self._faces.available:
                 media.face_count = self._faces.count_faces(path)
-            media.analysis = self._vision.analyze_image(path)
+            with self._ai_slots:
+                media.analysis = self._vision.analyze_image(path)
 
-            if media.capture_date is None and self._config.ai.estimate_date_when_missing:
-                estimate = self._vision.estimate_date(path)
-                if estimate is not None:
-                    media.capture_date = estimate
-                    media.date_source = DateSource.AI_ESTIMATE
+                if media.capture_date is None and self._config.ai.estimate_date_when_missing:
+                    estimate = self._vision.estimate_date(path)
+                    if estimate is not None:
+                        media.capture_date = estimate
+                        media.date_source = DateSource.AI_ESTIMATE
 
         exif = meta.raw or None
         self._db.upsert_media(media, exif=exif)

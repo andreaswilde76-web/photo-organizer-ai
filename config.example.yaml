@@ -44,8 +44,13 @@ ai:
   enabled: true
   # Down-scale the longest image edge before sending to the model (px).
   max_image_size: 1024
-  # Request timeout in seconds.
+  # Request timeout in seconds. Increase this on slow/CPU-only machines where a
+  # single image analysis takes longer than the default.
   timeout: 120
+  # How many vision-model requests may run at once. Ollama serves requests
+  # serially, so keep this at 1 (a higher value only helps a server configured
+  # for parallelism via OLLAMA_NUM_PARALLEL).
+  max_concurrency: 1
   # Use the vision model to *estimate* a capture date when no metadata exists.
   estimate_date_when_missing: true
 

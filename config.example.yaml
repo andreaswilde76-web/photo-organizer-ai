@@ -85,7 +85,12 @@ clustering:
   min_cluster_size: 1
 
 performance:
-  # Number of worker threads for I/O + AI requests. 0 = auto (cpu_count).
+  # Number of worker threads for I/O (hashing, metadata). 0 = auto (cpu_count).
+  # AI requests are throttled separately via ai.max_concurrency.
   workers: 0
   # Try to use the GPU if the backend supports it.
   use_gpu: true
+  # Hash only head+tail+size instead of reading each file fully. Much faster for
+  # large libraries on network/slow drives. Set to false only if you rely on
+  # exact-content duplicate detection.
+  fast_hash: true

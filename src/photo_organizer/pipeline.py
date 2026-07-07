@@ -107,7 +107,16 @@ class Pipeline:
         self._pause.set()
 
         _LOG.info("Scanning source directory %s ...", self._config.source_dir)
-        discovered = list(self._scanner.scan(self._config.source_dir))
+        discovered: list[tuple[Path, MediaKind]] = []
+        for item in self._scanner.scan(self._config.source_dir):
+            if self._should_stop():
+                break
+            discovered.append(item)
+            count = len(discovered)
+            if count % 500 == 0:
+                _LOG.info("Scanning… %d media files found so far.", count)
+                if progress is not None:
+                    progress(0, 0, f"Scanning… {count} files found")
         result = PipelineResult()
         result.progress.total = len(discovered)
         _LOG.info("Found %d media files.", len(discovered))
@@ -171,7 +180,8 @@ class Pipeline:
         self._wait_if_paused()
         if self._should_stop():
             return None, False
-        file_hash = hash_file(path, partial=is_video)
+        partial = is_video or self._config.performance.fast_hash
+        file_hash = hash_file(path, partial=partial)
 
         cached = self._db.load_media(file_hash)
         if cached is not None and self._db.has_analysis(file_hash):

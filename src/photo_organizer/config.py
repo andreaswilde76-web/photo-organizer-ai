@@ -157,6 +157,10 @@ class PerformanceConfig:
 
     workers: int = 0
     use_gpu: bool = True
+    # Hash only the head+tail+size of each file instead of reading it fully.
+    # Dramatically faster for large libraries on slow/network drives while
+    # remaining an excellent cache key.
+    fast_hash: bool = True
 
     def effective_workers(self) -> int:
         """Return the concrete worker count (resolving ``0`` to cpu_count)."""
